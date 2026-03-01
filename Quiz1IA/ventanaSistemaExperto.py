@@ -48,7 +48,7 @@ def ventanaSE(ventana):
     #Presencia Arbol
     labelPresenciaArbol = tk.Label(frameSE, text="Presencia Arbol", bg= "coral1", font=("georgia", 13))
     cajonPresenciaArbol = tk.Listbox(frameSE, width=30 , selectmode= "multiple", exportselection= False)
-    elementosPresenciaArbol = ["Ramas Escobas", "Tallo Seco", "Raiz Necrosada", "Tronco Negrosado"]
+    elementosPresenciaArbol = ["Ramas Escobas", "Tallo Seco", "Raiz Necrosada", "Tronco Necrosado"]
 
     for ele in elementosPresenciaArbol:
         cajonPresenciaArbol.insert(tk.END, ele)     

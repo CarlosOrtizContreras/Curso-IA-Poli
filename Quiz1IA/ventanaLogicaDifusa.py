@@ -3,7 +3,6 @@ from tkinter.scrolledtext import ScrolledText
 import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
 def ventanaLD(ventana):
@@ -17,54 +16,54 @@ def ventanaLD(ventana):
     frameFD.pack()
     frameFD.pack_propagate(False)
 
-    # ====== Titulo ======
+    # Titulo 
     tituloFD = tk.Label(frameFD,
                         text="Sistema Difuso de Evaluación\nViabilidad de Siembra de Cacao",
                         font=("georgia", 20),
                         bg="coral1")
     tituloFD.place(rely=.05, relx=.5, anchor="center")
 
-    # ======================
+    
     # VARIABLES DIFUSAS
-    # ======================
+   
     altitud = ctrl.Antecedent(np.arange(0, 2001, 1), 'altitud')
     ph = ctrl.Antecedent(np.arange(4, 8.1, 0.1), 'ph')
     precipitacion = ctrl.Antecedent(np.arange(500, 3001, 1), 'precipitacion')
     viabilidad = ctrl.Consequent(np.arange(0, 11, 1), 'viabilidad')
 
-    altitud['baja'] = fuzz.trimf(altitud.universe, [0, 0, 800])
-    altitud['media'] = fuzz.trimf(altitud.universe, [600, 1000, 1400])
-    altitud['alta'] = fuzz.trimf(altitud.universe, [1200, 2000, 2000])
+    altitud['baja'] = fuzz.trapmf(altitud.universe, [0, 0,550, 650])
+    altitud['media'] = fuzz.trimf(altitud.universe, [600, 700, 800])
+    altitud['alta'] = fuzz.trapmf(altitud.universe, [750, 800, 2000,2000])
 
-    ph['acido'] = fuzz.trimf(ph.universe, [4, 4, 5.5])
-    ph['ideal'] = fuzz.trimf(ph.universe, [5.5, 6.5, 7])
-    ph['alcalino'] = fuzz.trimf(ph.universe, [6.5, 8, 8])
+    ph['acido'] = fuzz.trapmf(ph.universe, [4, 4,5, 5.8])
+    ph['ideal'] = fuzz.trapmf(ph.universe, [5.5, 6, 6.5, 7])
+    ph['alcalino'] = fuzz.trapmf(ph.universe, [6.7, 7.5, 8,8])
 
-    precipitacion['baja'] = fuzz.trimf(precipitacion.universe, [500, 500, 1200])
-    precipitacion['media'] = fuzz.trimf(precipitacion.universe, [1000, 1800, 2500])
-    precipitacion['alta'] = fuzz.trimf(precipitacion.universe, [2200, 3000, 3000])
+    precipitacion['baja'] = fuzz.trapmf(precipitacion.universe, [500, 500, 1400,1500])
+    precipitacion['media'] = fuzz.trapmf(precipitacion.universe, [1400,1500,2500,2700])
+    precipitacion['alta'] = fuzz.trapmf(precipitacion.universe, [2500,2700, 3000, 3000])
 
-    viabilidad['mala'] = fuzz.trimf(viabilidad.universe, [0, 0, 4])
-    viabilidad['regular'] = fuzz.trimf(viabilidad.universe, [3, 5, 7])
-    viabilidad['buena'] = fuzz.trimf(viabilidad.universe, [6, 10, 10])
+    viabilidad['mala'] = fuzz.trapmf(viabilidad.universe, [0, 0,3, 4])
+    viabilidad['regular'] = fuzz.trapmf(viabilidad.universe, [3, 4, 6,7])
+    viabilidad['buena'] = fuzz.trapmf(viabilidad.universe, [6,7, 10, 10])
 
-    # ======================
+   
     # REGLAS
-    # ======================
+    
     regla1 = ctrl.Rule(altitud['media'] & ph['ideal'] & precipitacion['media'],
                        viabilidad['buena'], label="Regla 1: Altitud media, pH ideal, precipitación media")
-    regla2 = ctrl.Rule(ph['acido'] | precipitacion['baja'],
-                       viabilidad['mala'], label="Regla 2: pH ácido o precipitación baja")
-    regla3 = ctrl.Rule(altitud['alta'] | ph['alcalino'],
-                       viabilidad['regular'], label="Regla 3: Altitud alta o pH alcalino")
-    regla_defecto = ctrl.Rule(altitud['baja'] | ph['acido'] | precipitacion['baja'],
-                              viabilidad['mala'], label="Regla por defecto: condiciones extremas")
+    regla2 = ctrl.Rule(ph['alcalino'] | precipitacion['alta'] | altitud['alta'],
+                       viabilidad['mala'], label="Regla 2: condiciones extremas altas")
+    regla3 = ctrl.Rule(altitud['baja'] & ph['ideal'] & precipitacion['alta'],
+                       viabilidad['regular'], label="Regla 3: Condiciones moderadamente estables ")
+    regla4 = ctrl.Rule(altitud['baja'] | ph['acido'] | precipitacion['baja'],
+                              viabilidad['mala'], label="Regla 4: condiciones extremas bajas")
 
-    sistema_ctrl = ctrl.ControlSystem([regla1, regla2, regla3, regla_defecto])
+    sistema_ctrl = ctrl.ControlSystem([regla1, regla2, regla3, regla4])
 
-    # ======================
+ 
     # INTERFAZ DE ENTRADA
-    # ======================
+    
     tk.Label(frameFD, text="Altitud (msnm)", bg="coral1").place(rely=.15, relx=.2, anchor="center")
     scaleAltitud = tk.Scale(frameFD, from_=0, to=2000, orient="horizontal", length=300, bg="coral1")
     scaleAltitud.place(rely=.2, relx=.2, anchor="center")
@@ -77,15 +76,24 @@ def ventanaLD(ventana):
     scalePre = tk.Scale(frameFD, from_=500, to=3000, orient="horizontal", length=300, bg="coral1")
     scalePre.place(rely=.46, relx=.2, anchor="center")
 
-    # ======================
+   
     # SCROLLED TEXT PARA RESULTADOS
-    # ======================
-    salidaTexto = ScrolledText(frameFD, width=70, height=25)
-    salidaTexto.place(rely=.25, relx=.65, anchor="center")
+    
+    salidaTexto = ScrolledText(frameFD)
+    salidaTexto.configure(
+    width=70,
+    height=25,
+    wrap= "word")
 
-    # ======================
+    salidaTexto.place(
+    relx=0.65,
+    rely=0.4,
+    anchor="center"
+)
+
+
     # FUNCIONES
-    # ======================
+
     def calcular():
         salidaTexto.delete("1.0", tk.END)
         simulador = ctrl.ControlSystemSimulation(sistema_ctrl)
@@ -107,7 +115,7 @@ def ventanaLD(ventana):
 
         if resultado >= 7:
             salidaTexto.insert(tk.END, "Conclusión: Terreno ALTAMENTE viable para cacao.\n")
-        elif resultado >= 4:
+        elif resultado >= 4 and resultado < 7:
             salidaTexto.insert(tk.END, "Conclusión: Terreno MODERADAMENTE viable.\n")
         else:
             salidaTexto.insert(tk.END, "Conclusión: Terreno NO recomendable para siembra.\n")
@@ -116,30 +124,32 @@ def ventanaLD(ventana):
         salidaTexto.insert(tk.END, "\n--- Reglas activadas ---\n")
         for r in sistema_ctrl.rules:
             try:
-                grado = r.antecedent.membership_value({
-                    'altitud': scaleAltitud.get(),
-                    'ph': scalePh.get(),
-                    'precipitacion': scalePre.get()
-                })
+                grado = r.aggregate_firing[simulador]
+
+                if grado > 0:
+                    salidaTexto.insert(
+                        tk.END,
+                        f"{r.label}: grado activación = {round(float(grado),2)}\n"
+                    )
+
             except Exception:
-                grado = 0
-            salidaTexto.insert(tk.END, f"{r.label}: grado activación ~ {round(grado,2)}\n")
+                pass
 
     def mostrar_imagenes():
         # Genera los gráficos solo cuando se requiere
-        fig, axes = plt.subplots(3,1, figsize=(5,8))
-        altitud.view(ax=axes[0])
-        ph.view(ax=axes[1])
-        precipitacion.view(ax=axes[2])
+        fig, axes = plt.subplots(2,2, figsize=(5,8))
+        altitud.view(ax=axes[0,0])
+        ph.view(ax=axes[0, 1])
+        precipitacion.view(ax=axes[1,0])
+        viabilidad.view(ax= axes[1,1])
+
         plt.tight_layout()
 
-        canvas = FigureCanvasTkAgg(fig, master=frameFD)
-        canvas.draw()
+        
        
 
-    # ======================
     # BOTONES
-    # ======================
+
     botonCalcular = tk.Button(frameFD, text="Calcular", bg="green", width=20, command=calcular)
     botonMostrarImg = tk.Button(frameFD, text="Mostrar Imágenes", bg="orange", width=20, command=mostrar_imagenes)
     botonMenu = tk.Button(frameFD, text="Menu Inicial", bg="yellow", width=20, command=pantallaFD.destroy)
