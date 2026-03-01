@@ -81,7 +81,7 @@ def ventanaLD(ventana):
     # SCROLLED TEXT PARA RESULTADOS
     # ======================
     salidaTexto = ScrolledText(frameFD, width=70, height=25)
-    salidaTexto.place(rely=.3, relx=.65, anchor="center", height=200)
+    salidaTexto.place(rely=.25, relx=.65, anchor="center")
 
     # ======================
     # FUNCIONES
